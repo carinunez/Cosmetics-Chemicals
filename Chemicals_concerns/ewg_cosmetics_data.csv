@@ -1,0 +1,87 @@
+ChemicalName,name_EWG,hazard_score,Cancer,Allergies & Immunotoxicity,Developmental and Reproductive Toxicity,Use Restrictions
+titanium dioxide,Titanium Dioxide,1,MODERATE,LOW,LOW,LOW
+coal tar,Coal Tar,10,HIGH,MODERATE,LOW_MODERATE,HIGH
+estragole,Estragole,4,MODERATE,MODERATE,LOW,LOW
+cocamide dea,Cocamide Dea,8,MODERATE,MODERATE,LOW,HIGH
+toluene,Toluene,9,LOW,LOW,MODERATE,HIGH
+retinol,Hexylresorcinol,1,LOW,LOW,LOW,LOW
+retinyl palmitate (vitamin a),Retinyl Palmitate (Vitamin A Palmitate),9,LOW_MODERATE,LOW,HIGH,HIGH
+butylated hydroxyanisole,,,,,,
+coffea arabica extract,Coffea Arabica Fruit Extract,1,LOW,LOW,LOW,LOW
+lauramide dea,Lauramide Dea,5,LOW,LOW,LOW,HIGH
+carbon black,Carbon Black (Uncertified D&C Black No. 2),10,MODERATE,MODERATE,LOW_MODERATE,HIGH
+progesterone,Progesterone,7,MODERATE,LOW,MODERATE,HIGH
+methyleugenol,Methyleugenyl Dimethicone Copolyol,2,LOW,LOW,LOW,LOW
+o-phenylphenol,2 Phenylphenol,8,MODERATE,MODERATE,LOW,MODERATE
+acrylamide,Polyacrylamide,6,LOW,LOW,LOW,HIGH
+formaldehyde,Formaldehyde,10,HIGH,MODERATE,LOW,HIGH
+ginkgo biloba extract,Ginkgo Biloba (Maidenhair Tree) Nut Extract,3,MODERATE,LOW,LOW,LOW
+mica,Mica,1,LOW,LOW,LOW,LOW
+ethylene glycol,Ethylene Glycol,6,LOW,LOW,MODERATE,LOW
+retinyl acetate,Terpinyl Acetate,1,LOW,LOW,LOW,LOW
+ethyl acrylate,Ethylhexyl Acrylate,4,LOW,MODERATE,LOW,LOW
+trade secret,Trideceth 9,2,LOW,LOW,LOW,LOW
+methanol,Methanol,6,LOW,LOW,MODERATE,HIGH
+genistein,Genistein,1,LOW,LOW,LOW_MODERATE,LOW
+diethanolamine,Diethanolamine,10,MODERATE,MODERATE,LOW,HIGH
+tea-lauryl sulfate,Mea Lauryl Sulfate,4,LOW,LOW,LOW,HIGH
+lead acetate,Lead Acetate,10,MODERATE,LOW,HIGH,HIGH
+talc,Talc,8,HIGH,LOW,LOW,HIGH
+triethanolamine,Triethanolamine,6,LOW,MODERATE,LOW,HIGH
+4-Nitro-O-Phenylenediamine,4 Nitro O Phenylenediamine,6,LOW_MODERATE,MODERATE,LOW,HIGH
+safrole,,,,,,
+styrene,Styrene/ Pvp Copolymer,1,LOW,LOW,LOW,LOW
+acetaldehyde,Acetaldehyde,9,HIGH,LOW,LOW,HIGH
+"1,4-dioxane","5 Bromo 5 Nitro 1,3 Dioxane",6,LOW,HIGH,LOW,MODERATE
+dichloroacetic acid,Dichloroacetic Acid,7,HIGH,LOW,MODERATE,LOW
+ethylene oxide,Ethylene Oxide,10,HIGH,LOW,MODERATE,HIGH
+lead,Lead,10,MODERATE,LOW,MODERATE,HIGH
+dichloromethane,Dichloromethane,8,MODERATE,LOW,LOW,HIGH
+benzene,Ethylbenzene,6,MODERATE,LOW,LOW_MODERATE,LOW
+benzyl chloride,Benzoyl Chloride,3,LOW,MODERATE,LOW,LOW
+dimethylnitrosamine,Dimethylnitrosoamine,8,MODERATE,LOW,LOW,HIGH
+propylene oxide,Propylene Oxide,8,MODERATE,LOW,LOW,HIGH
+methyl chloride,Dimethylcarbamoyl Chloride,8,MODERATE,LOW,LOW,HIGH
+candium,Calcium Silicate,1,LOW,LOW,LOW,LOW
+n-methylpyrrolidone,1 Ethyl 1 Methylpyrrolidinium Bromide,4,LOW,LOW,LOW,HIGH
+dibutyl phthalate,Dibutyl Phthalate,10,LOW,LOW,MODERATE,HIGH
+quinoline,Quinoline,10,HIGH,LOW,LOW,HIGH
+methylene glycol,Diethylene Glycol,6,LOW,LOW,LOW,HIGH
+benzophenone,Benzophenone,3,MODERATE,LOW,LOW,LOW
+musk xylene,,,,,,
+aspirin,Cyclosporin,1,LOW,LOW,LOW,LOW
+benzophenone-3,Benzophenone 2,4,LOW,MODERATE,LOW,LOW
+crystalline silica,"Silica, Crystalline (Quartz)",4,MODERATE,LOW,LOW,LOW
+sodium bromate,Sodium Bromate,4,LOW,MODERATE,LOW,MODERATE
+phenacetin,Phenacetin,5,HIGH,LOW,LOW,LOW
+retinoic acid,Retinoic Acid,9,LOW_MODERATE,LOW,HIGH,HIGH
+mercury,Mercury,9,LOW,LOW,MODERATE,HIGH
+mineral oil,Mineral Oil,3,LOW,MODERATE,LOW,LOW
+p-aminodiphenylamine,"4,4' Diaminodiphenylamine",4,LOW_MODERATE,LOW,LOW,HIGH
+permethrin,Permethrin,6,MODERATE,MODERATE,LOW,LOW
+acetylsalicylic acid,Acetylsalicylic Acid,7,LOW,LOW,MODERATE,HIGH
+selenium sulfide,Selenium Sulfide,8,MODERATE,LOW,LOW,HIGH
+oil orange ss,Orange Oil Terpeneless,1,LOW,LOW,LOW,LOW
+spironolactone,,,,,,
+nickel (metallic),,,,,,
+caffeic acid,Caffeic Acid,3,MODERATE,LOW,LOW,LOW
+cocamide mea,Cocamide Mea,4,LOW,LOW,LOW,HIGH
+c.i. acid red 114,,,,,,
+caffeine,Caffeine,2,LOW,LOW,LOW,LOW
+benzophenone-4,Benzophenone 2,4,LOW,MODERATE,LOW,LOW
+octinoxate,Octinoxate,7,LOW,LOW_MODERATE,LOW_MODERATE,LOW
+avobenzone,Avobenzone,2,LOW,LOW,LOW,MODERATE
+pulegone,D Pulegone,1,LOW_MODERATE,LOW,LOW,LOW
+beta-myrcene,,,,,,
+tetramethyl decynediol,Tetramethyl Decynediol,4,LOW,LOW,LOW,HIGH
+benzo[a]pyrene,Benzo[A]Pyrene,10,HIGH,MODERATE,LOW_MODERATE,HIGH
+benz[a]anthracene,Benz(a)anthracene,8,MODERATE,LOW,LOW,HIGH
+"n,n-dimethyl-p-toluidine",Dimethyl Oxazolidine,1,LOW,LOW,LOW,LOW
+n-nitrosodiethanolamine,,,,,,
+benzophenone-2,Benzophenone 2,4,LOW,MODERATE,LOW,LOW
+vinyl acetate,Vinyl Acetate,6,LOW_MODERATE,LOW,LOW,HIGH
+trichloroacetic acid,Trichloroacetic Acid,6,LOW_MODERATE,LOW,LOW,HIGH
+phenacemide,,,,,,
+polygeenan,,,,,,
+ethanol,Ethanol,1,LOW,LOW,LOW,LOW
+bisphenol a,Bisphenol A,7,LOW,MODERATE,MODERATE,HIGH
