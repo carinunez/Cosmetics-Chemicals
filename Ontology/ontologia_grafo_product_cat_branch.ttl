@@ -1,38 +1,58 @@
-
-# Prefijos generales
 @prefix ex:   <http://example.org/cdph/> .
 @prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
 
 # Clases
-ex:Product     a rdfs:Class ;
-    rdfs:label "Producto"@es .
-
+ex:Product     a rdfs:Class ; rdfs:label "Producto"@es .
 ex:Company     a rdfs:Class .
-ex:Brand       a rdfs:Class .
+ex:Brand       a rdfs:Class ; rdfs:subClassOf ex:Company .
 ex:Category    a rdfs:Class .
-ex:SubCategory a rdfs:Class .
+ex:SubCategory a rdfs:Class ; rdfs:subClassOf ex:Category .
+ex:Chemical    a rdfs:Class .
 
 # DatatypeProperties para Product
-ex:hasCDPHId                a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:string .
-ex:hasProductName           a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:string .
-ex:hasInitialDateReported   a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:dateTime .
-ex:hasMostRecentDateReported a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:dateTime .
-ex:hasDiscontinuedDate      a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:dateTime .
+ex:hasCDPHId                  a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:string .
+ex:hasProductName             a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:string .
+ex:hasInitialDateReported     a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:dateTime .
+ex:hasMostRecentDateReported  a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:dateTime .
+ex:hasDiscontinuedDate        a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:dateTime .
+ex:hasColor                   a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:string .
+ex:hasEssence                 a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:string .
 
-# Propiedades de objeto para metadatos
-ex:productMadeByCompany     a rdf:Property ; rdfs:domain ex:Product ; rdfs:range ex:Company .
-ex:productHasBrand          a rdf:Property ; rdfs:domain ex:Product ; rdfs:range ex:Brand .
-ex:productHasCategory       a rdf:Property ; rdfs:domain ex:Product ; rdfs:range ex:Category .
-ex:productHasSubCategory    a rdf:Property ; rdfs:domain ex:Product ; rdfs:range ex:SubCategory .
+# DatatypeProperties para Company
+ex:hasCompanyId       a rdf:Property ; rdfs:domain ex:Company ; rdfs:range xsd:string .
+ex:hasCompanyName     a rdf:Property ; rdfs:domain ex:Company ; rdfs:range xsd:string .
 
-# DatatypeProperties para Company, Brand, Category y SubCategory
-ex:hasCompanyId             a rdf:Property ; rdfs:domain ex:Company ; rdfs:range xsd:string .
-ex:hasCompanyName           a rdf:Property ; rdfs:domain ex:Company ; rdfs:range xsd:string .
+# DatatypeProperties para Brand
+ex:hasBrandName       a rdf:Property ; rdfs:domain ex:Brand   ; rdfs:range xsd:string .
 
-ex:hasBrandName             a rdf:Property ; rdfs:domain ex:Brand ; rdfs:range xsd:string .
+# DatatypeProperties para Category
+ex:hasPrimaryCategoryId a rdf:Property ; rdfs:domain ex:Category ; rdfs:range xsd:string .
 
-ex:hasPrimaryCategoryId     a rdf:Property ; rdfs:domain ex:Category ; rdfs:range xsd:string .
+# DatatypeProperties para SubCategory
+ex:hasSubCategoryId   a rdf:Property ; rdfs:domain ex:SubCategory ; rdfs:range xsd:string .
 
-ex:hasSubCategoryId         a rdf:Property ; rdfs:domain ex:SubCategory ; rdfs:range xsd:string .
+# DatatypeProperties para Chemical
+ex:hasChemicalId      a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range xsd:string .
+ex:hasChemicalName    a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range xsd:string .
+ex:hasCasNumber       a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range xsd:string .
+
+# ObjectProperties
+ex:productMadeByCompany   a rdf:Property ; rdfs:domain ex:Product ; rdfs:range ex:Company .
+ex:productHasBrand        a rdf:Property ; rdfs:domain ex:Product ; rdfs:range ex:Brand .
+ex:productHasCategory     a rdf:Property ; rdfs:domain ex:Product ; rdfs:range ex:Category .
+ex:productHasSubCategory  a rdf:Property ; rdfs:domain ex:Product ; rdfs:range ex:SubCategory .
+ex:productHasChemical     a rdf:Property ; rdfs:domain ex:Product ; rdfs:range ex:Chemical .
+
+# Propiedades transitivas y cadenas
+ex:brandOfCompany a owl:ObjectProperty ;
+    owl:inverseOf ex:productHasBrand ;
+    a owl:TransitiveProperty ;
+    owl:propertyChainAxiom (ex:productHasBrand ex:brandOfCompany) .
+
+ex:subCategoryOf a owl:ObjectProperty ;
+    owl:inverseOf ex:productHasSubCategory ;
+    a owl:TransitiveProperty ;
+    owl:propertyChainAxiom (ex:productHasSubCategory ex:subCategoryOf) .
