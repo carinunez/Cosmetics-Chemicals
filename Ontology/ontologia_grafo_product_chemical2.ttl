@@ -1,0 +1,32 @@
+@prefix ex:   <http://example.org/cdph/> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Clases
+ex:Product     a rdfs:Class ; rdfs:label "Producto"@es .
+ex:Chemical    a rdfs:Class ; rdfs:label "Químico"@es .
+ex:Concern     a rdfs:Class .
+
+# DatatypeProperties para Product
+ex:hasCDPHId        a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:string .
+ex:hasProductName   a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:string .
+
+# DatatypeProperties para Chemical
+ex:hasChemID        a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range xsd:int .
+ex:hasCasNumber     a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range xsd:string .
+ex:hasChemicalName  a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range xsd:string .
+ex:hasEWGName       a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range xsd:string .
+ex:hasHazardScore   a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range xsd:int .
+
+# DatatypeProperties para Concern (asociadas directamente al Chemical)
+ex:AllergiesConcern           a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range xsd:string .
+ex:CancerConcern              a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range xsd:string .
+ex:DevelopReproductiveConcern a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range xsd:string .
+ex:UseRestrictionsConcern     a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range xsd:string .
+
+# ObjectProperties entre clases
+ex:containsChemical a rdf:Property ; rdfs:domain ex:Product ; rdfs:range ex:Chemical .
+
+# (Opcional) Relación comentada: Chemical → Concern
+# ex:hasConcern a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range ex:Concern .
