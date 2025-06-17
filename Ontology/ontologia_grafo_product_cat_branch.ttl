@@ -26,13 +26,17 @@ ex:hasCompanyId       a rdf:Property ; rdfs:domain ex:Company ; rdfs:range xsd:s
 ex:hasCompanyName     a rdf:Property ; rdfs:domain ex:Company ; rdfs:range xsd:string .
 
 # DatatypeProperties para Brand
-ex:hasBrandName       a rdf:Property ; rdfs:domain ex:Brand   ; rdfs:range xsd:string .
+ex:hasBrandId       a rdf:Property ; rdfs:domain ex:Brand   ; rdfs:range xsd:string .
+ex:hasBrandName     a rdf:Property ; rdfs:domain ex:Brand   ; rdfs:range xsd:string .
 
 # DatatypeProperties para Category
-ex:hasPrimaryCategoryId a rdf:Property ; rdfs:domain ex:Category ; rdfs:range xsd:string .
+ex:hasPrimaryCategoryId    a rdf:Property ; rdfs:domain ex:Category ; rdfs:range xsd:string .
+ex:hasPrimaryCategoryName  a rdf:Property ; rdfs:domain ex:Category ; rdfs:range xsd:string .
 
 # DatatypeProperties para SubCategory
-ex:hasSubCategoryId   a rdf:Property ; rdfs:domain ex:SubCategory ; rdfs:range xsd:string .
+ex:hasSubCategoryId     a rdf:Property ; rdfs:domain ex:SubCategory ; rdfs:range xsd:string .
+ex:hasSubCategoryName   a rdf:Property ; rdfs:domain ex:SubCategory ; rdfs:range xsd:string .
+
 
 # DatatypeProperties para Chemical
 ex:hasChemicalId      a rdf:Property ; rdfs:domain ex:Chemical ; rdfs:range xsd:string .
@@ -48,11 +52,11 @@ ex:productHasChemical     a rdf:Property ; rdfs:domain ex:Product ; rdfs:range e
 
 # Propiedades transitivas y cadenas
 ex:brandOfCompany a owl:ObjectProperty ;
-    owl:inverseOf ex:productHasBrand ;
+    # owl:inverseOf ex:productHasBrand ;
     a owl:TransitiveProperty ;
     owl:propertyChainAxiom (ex:productHasBrand ex:brandOfCompany) .
 
 ex:subCategoryOf a owl:ObjectProperty ;
-    owl:inverseOf ex:productHasSubCategory ;
+    # owl:inverseOf ex:productHasSubCategory ;
     a owl:TransitiveProperty ;
     owl:propertyChainAxiom (ex:productHasSubCategory ex:subCategoryOf) .

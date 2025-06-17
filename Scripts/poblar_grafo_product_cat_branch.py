@@ -17,7 +17,7 @@ g.bind("rdfs", RDFS)
 g.bind("xsd", XSD)
 
 # Leer CSV
-ruta_csv = "cscpopendata.csv"  # Ajustar ruta al path propio
+ruta_csv = "cosmetics2.csv"  # Ajustar ruta al path propio
 df = pd.read_csv(ruta_csv, dtype=str).fillna("")
 
 # Sets para evitar duplicados
@@ -92,20 +92,28 @@ prop_hasProductName = EX.hasProductName
 prop_hasInitialDateReported = EX.hasInitialDateReported
 prop_hasMostRecentDateReported = EX.hasMostRecentDateReported
 prop_hasDiscontinuedDate = EX.hasDiscontinuedDate
+
 prop_productMadeByCompany = EX.productMadeByCompany
 prop_productHasBrand = EX.productHasBrand
 prop_productHasCategory = EX.productHasCategory
 prop_productHasSubCategory = EX.productHasSubCategory
+
 prop_hasCompanyId = EX.hasCompanyId
 prop_hasCompanyName = EX.hasCompanyName
+
+prop_hasBrandId = EX.hasBrandId
 prop_hasBrandName = EX.hasBrandName
+
 prop_hasPrimaryCategoryId = EX.hasPrimaryCategoryId
 prop_hasPrimaryCategoryName = EX.hasPrimaryCategoryName
+
 prop_hasSubCategoryId = EX.hasSubCategoryId
 prop_hasSubCategoryName = EX.hasSubCategoryName
 
 # Iterar filas
 for _, row in df.iterrows():
+    # ------------------------------------- PRODUCTS -------------------------------------
+
     prod_id = row["CDPHId"]
     URIProd = uri_producto(prod_id)
 
@@ -127,46 +135,61 @@ for _, row in df.iterrows():
             g.add((URIProd, prop_hasDiscontinuedDate, Literal(descontinuado, datatype=XSD.dateTime)))
         productos_creados.add(prod_id)
 
-    # Compañía
+    # ------------------------------------- COMPANY -------------------------------------
     comp_id = row["CompanyId"]
     URIComp = uri_compania(comp_id)
     if comp_id not in companias_creadas:
         g.add((URIComp, RDF.type, ClaseCompany))
         g.add((URIComp, prop_hasCompanyId, Literal(comp_id, datatype=XSD.string)))
+
         if "CompanyName" in df.columns and row["CompanyName"].strip():
             g.add((URIComp, prop_hasCompanyName, Literal(row["CompanyName"], datatype=XSD.string)))
+            
         companias_creadas.add(comp_id)
     g.add((URIProd, prop_productMadeByCompany, URIComp))
 
-    # Marca
-    if "BrandName" in df.columns and row["BrandName"].strip():
-        brand_name = row["BrandName"]
-        URIBrand = uri_marca(brand_name)
-        if brand_name not in marcas_creadas:
-            g.add((URIBrand, RDF.type, ClaseBrand))
-            g.add((URIBrand, prop_hasBrandName, Literal(brand_name, datatype=XSD.string)))
-            marcas_creadas.add(brand_name)
-        g.add((URIProd, prop_productHasBrand, URIBrand))
+    # ------------------------------------- BRAND -------------------------------------
+    brand_id = row["BrandId"]
+    URIBrand = uri_marca(brand_id)
+    if brand_id not in marcas_creadas:
+        g.add((URIBrand, RDF.type, ClaseBrand))
+        g.add((URIBrand, prop_hasBrandId, Literal(brand_id, datatype=XSD.string)))
 
-    # Categoría
+        if 'BrandId' in df.columns and row["BrandId"].strip():
+            g.add((URIBrand, prop_hasBrandName, Literal(row["BrandName"], datatype=XSD.string)))
+
+            # Busco la compañia asociada a esta Marca
+            g.add((URIBrand, RDFS.subClassOf, URIComp))
+
+            marcas_creadas.add(brand_id)
+    g.add((URIProd, prop_productHasBrand, URIBrand))
+
+    # ------------------------------------- CATEGORIA -------------------------------------
     cat_id = row["PrimaryCategoryId"]
     URICat = uri_categoria(cat_id)
     if cat_id not in categorias_creadas:
         g.add((URICat, RDF.type, ClaseCategory))
         g.add((URICat, prop_hasPrimaryCategoryId, Literal(cat_id, datatype=XSD.string)))
-        if "PrimaryCategoryName" in df.columns and row["PrimaryCategoryName"].strip():
-            g.add((URICat, prop_hasPrimaryCategoryName, Literal(row["PrimaryCategoryName"], datatype=XSD.string)))
+
+        if "PrimaryCategoryId" in df.columns and row["PrimaryCategoryId"].strip():
+            g.add((URICat, prop_hasPrimaryCategoryName, Literal(row["PrimaryCategory"], datatype=XSD.string)))
+        
         categorias_creadas.add(cat_id)
     g.add((URIProd, prop_productHasCategory, URICat))
 
-    # Subcategoría
+    # ------------------------------------- SUB CATEGORIA -------------------------------------
     subcat_id = row["SubCategoryId"]
     URISubcat = uri_subcategoria(subcat_id)
     if subcat_id not in subcategorias_creadas:
         g.add((URISubcat, RDF.type, ClaseSubCategory))
         g.add((URISubcat, prop_hasSubCategoryId, Literal(subcat_id, datatype=XSD.string)))
-        if "SubCategoryName" in df.columns and row["SubCategoryName"].strip():
-            g.add((URISubcat, prop_hasSubCategoryName, Literal(row["SubCategoryName"], datatype=XSD.string)))
+
+        if "SubCategoryId" in df.columns and row["SubCategoryId"].strip():
+            g.add((URISubcat, prop_hasSubCategoryName, Literal(row["SubCategory"], datatype=XSD.string)))
+
+            # Busco la compañia asociada a esta SubCategoria
+            g.add((URISubcat, RDFS.subClassOf, URICat))
+
         subcategorias_creadas.add(subcat_id)
     g.add((URIProd, prop_productHasSubCategory, URISubcat))
 
