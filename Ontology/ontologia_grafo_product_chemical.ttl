@@ -22,7 +22,7 @@ ex:Concern     a rdfs:Class.
                                # -> Concerns (4 concerns)
 
 
-# DatatypeProperties para Quimicos
+# DatatypeProperties para Productos
 ex:hasCDPHId                a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:string .
 ex:hasProductName           a rdf:Property ; rdfs:domain ex:Product ; rdfs:range xsd:string .
 

@@ -1,4 +1,3 @@
-*.ipynb
 .env
 .venv/
 __pycache__
@@ -6,6 +5,8 @@ __pycache__
 *.json
 *.xlsx
 *.xls
+*.ttl
+*.pt
 
 
 !Chemicals_concerns/*.csv
