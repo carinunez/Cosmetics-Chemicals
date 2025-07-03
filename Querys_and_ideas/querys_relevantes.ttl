@@ -1,0 +1,162 @@
+#  Ingredientes peligrosos compartidos y centralidad en la red
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT ?chemicalName 
+       (COUNT(DISTINCT ?brand) AS ?brandCount) 
+       (COUNT(DISTINCT ?product) AS ?productCount)
+       (COUNT(DISTINCT ?category) AS ?categoryCoverage)
+WHERE {
+  ?product a ex:Product ;
+           ex:containsChemical ?chemical ;
+           ex:productHasBrand ?brand ;
+           ex:productHasCategory ?category .
+  
+  ?chemical ex:hasChemicalName ?chemicalName ;
+            ex:hasHazardScore ?score .
+  FILTER(?score >= 7)  # Químicos peligrosos
+  
+  ?brand ex:hasBrandName ?brandName .
+}
+GROUP BY ?chemicalName
+ORDER BY DESC(?brandCount) DESC(?productCount)
+
+#Marcas similares por perfil de ingredientes peligrosos (Análisis de similitud)
+PREFIX ex: <http://example.org/cdph/>
+PREFIX math: <http://www.w3.org/2005/xpath-functions/math#>
+
+SELECT ?brand1 ?brand2 
+       (COUNT(DISTINCT ?commonChemical) AS ?sharedChemicals)
+       (math:sqrt(COUNT(DISTINCT ?chem1) * COUNT(DISTINCT ?chem2)) AS ?similarityIndex)
+WHERE {
+  # Marcas y sus químicos
+  {
+    ?product1 ex:productHasBrand ?brand1 ;
+              ex:containsChemical ?chem1 .
+    ?chem1 ex:hasHazardScore ?score1 .
+    FILTER(?score1 >= 7)
+  }
+  UNION
+  {
+    ?product2 ex:productHasBrand ?brand2 ;
+              ex:containsChemical ?chem2 .
+    ?chem2 ex:hasHazardScore ?score2 .
+    FILTER(?score2 >= 7)
+  }
+  
+  # Químicos compartidos
+  ?commonProduct ex:productHasBrand ?brand1 ;
+                 ex:containsChemical ?commonChemical .
+  ?commonChemical ex:hasHazardScore ?commonScore .
+  FILTER(?commonScore >= 7)
+  
+  FILTER(?brand1 != ?brand2)
+}
+GROUP BY ?brand1 ?brand2
+HAVING (?sharedChemicals > 3)  # Mínimo de químicos compartidos
+ORDER BY DESC(?similarityIndex)
+LIMIT 20
+
+# Ingredientes peligrosos asociados a categorías específicas
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT ?categoryName ?chemicalName 
+       (COUNT(DISTINCT ?product) AS ?productCount)
+       (AVG(?hazardScore) AS ?avgHazard)
+WHERE {
+  ?product a ex:Product ;
+           ex:productHasCategory ?category ;
+           ex:containsChemical ?chemical .
+  
+  ?category ex:hasPrimaryCategoryName ?categoryName .
+  ?chemical ex:hasChemicalName ?chemicalName ;
+            ex:hasHazardScore ?hazardScore .
+  FILTER(?hazardScore >= 7)
+}
+GROUP BY ?categoryName ?chemicalName
+HAVING (COUNT(DISTINCT ?product) > 2)  # Filtro de relevancia
+ORDER BY ?categoryName DESC(?productCount)
+
+# Clusteres de químicos que aparecen juntos (Análisis de co-ocurrencia)
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT ?chemName1 ?chemName2 
+       (COUNT(DISTINCT ?product) AS ?cooccurrenceCount)
+       (COUNT(DISTINCT ?product)*100.0/(?totalProducts) AS ?cooccurrencePercentage)
+WHERE {
+  {
+    SELECT (COUNT(DISTINCT ?p) AS ?totalProducts) 
+    WHERE { ?p a ex:Product }
+  }
+  
+  # Productos con ambos químicos
+  ?product a ex:Product ;
+           ex:containsChemical ?chem1, ?chem2 .
+  
+  FILTER(?chem1 != ?chem2)
+  
+  ?chem1 ex:hasChemicalName ?chemName1 ;
+         ex:hasHazardScore ?score1 .
+  FILTER(?score1 >= 7)
+  
+  ?chem2 ex:hasChemicalName ?chemName2 ;
+         ex:hasHazardScore ?score2 .
+  FILTER(?score2 >= 7)
+  
+  # Orden alfabético para evitar duplicados
+  FILTER(STR(?chemName1) < STR(?chemName2))
+}
+GROUP BY ?chemName1 ?chemName2 ?totalProducts
+HAVING (?cooccurrenceCount > 3)  # Mínimo de co-ocurrencias
+ORDER BY DESC(?cooccurrencePercentage)
+
+# Marcas con mayor riesgo potencial (Centralidad de intermediación)
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT ?brandName 
+       (COUNT(DISTINCT ?chemical) AS ?dangerousChemicals)
+       (SUM(?hazardScore) AS ?totalHazard)
+       (COUNT(DISTINCT ?product) AS ?productCount)
+       (COUNT(DISTINCT ?chemical)*1.0/?totalBrands AS ?riskIndex)
+WHERE {
+  {
+    SELECT (COUNT(DISTINCT ?b) AS ?totalBrands) 
+    WHERE { 
+      ?p ex:productHasBrand ?b 
+    }
+  }
+  
+  ?product ex:productHasBrand ?brand ;
+           ex:containsChemical ?chemical .
+  
+  ?brand ex:hasBrandName ?brandName .
+  ?chemical ex:hasHazardScore ?hazardScore .
+  FILTER(?hazardScore >= 7)
+}
+GROUP BY ?brandName ?totalBrands
+ORDER BY DESC(?riskIndex) DESC(?totalHazard)
+LIMIT 10
+
+# Ingredientes outliers (baja frecuencia y combinaciones raras)
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT ?chemicalName ?casNumber
+       (COUNT(DISTINCT ?product) AS ?productCount)
+       (GROUP_CONCAT(DISTINCT ?brandName; SEPARATOR=", ") AS ?brands)
+       (GROUP_CONCAT(DISTINCT ?categoryName; SEPARATOR=", ") AS ?categories)
+WHERE {
+  ?product a ex:Product ;
+           ex:containsChemical ?chemical ;
+           ex:productHasBrand ?brand ;
+           ex:productHasCategory ?category .
+  
+  ?chemical ex:hasChemicalName ?chemicalName ;
+            ex:hasCasNumber ?casNumber ;
+            ex:hasHazardScore ?score .
+  FILTER(?score >= 7)
+  
+  ?brand ex:hasBrandName ?brandName .
+  ?category ex:hasPrimaryCategoryName ?categoryName .
+}
+GROUP BY ?chemicalName ?casNumber
+HAVING (COUNT(DISTINCT ?product) < 3)  # Menos de 3 productos
+ORDER BY ?productCount
