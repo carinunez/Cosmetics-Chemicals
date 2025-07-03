@@ -56,7 +56,7 @@ for prod_node in node_maps["Product"]:
     prod_label[prod_node] = int(bool(g.value(prod_node, uri("hasDiscontinuedDate"))))
 
 # Conteo de químicos por producto
-for s, _, o in g.triples((None, uri("productHasChemical"), None)):
+for s, _, o in g.triples((None, uri("containsChemical"), None)):
     if s in node_maps["Product"] and o in node_maps["Chemical"]:
         chem_counts[s] += 1
 
@@ -69,10 +69,11 @@ prod_labels = []
 for prod_node, idx in sorted(node_maps["Product"].items(), key=lambda x: x[1]):
     feat = [
         chem_counts.get(prod_node, 0),         # número de químicos
-        int(bool(g.value(prod_node, uri("productHasBrand")))),
-        int(bool(g.value(prod_node, uri("productHasCategory")))),
-        int(bool(g.value(prod_node, uri("productHasSubCategory")))),
-        int(bool(g.value(prod_node, uri("productMadeByCompany")))),
+        prod_age.get(prod_node, 0),            # edad en días
+    #    int(bool(g.value(prod_node, uri("productHasBrand")))),
+    #    int(bool(g.value(prod_node, uri("productHasCategory")))),
+    #    int(bool(g.value(prod_node, uri("productHasSubCategory")))),
+    #    int(bool(g.value(prod_node, uri("productMadeByCompany")))),
     ]
     prod_feats.append(feat)
     prod_labels.append(prod_label[prod_node])
@@ -81,26 +82,50 @@ data["Product"].x = torch.tensor(prod_feats, dtype=torch.float)
 data["Product"].y = torch.tensor(prod_labels, dtype=torch.long)
 
 # 8) Features para Chemical
+def level_to_int(level):
+    if not level:
+        return 0
+    level = str(level).upper()
+    if "LOW_MODERATE" in level:
+        return 1.5
+    if "LOW" in level:
+        return 1
+    if "MODERATE" in level:
+        return 2
+    if "HIGH" in level:
+        return 3
+    return 0
+
 chem_feats = []
 for chem_node, idx in sorted(node_maps["Chemical"].items(), key=lambda x: x[1]):
+    has_info = 0
     hv = 0
     h_lit = g.value(chem_node, uri("hasHazardScore"))
     if isinstance(h_lit, Literal):
         py = h_lit.toPython()
         if isinstance(py, (int, float)):
-            hv = int(py)
+            hv = float(py)
+            has_info = 1
         else:
             s = str(py)
-            hv = int(s) if s.isdigit() else 0
-    flags = [ # Me di cuenta de que son flags solo son indicaciones booleans despues de hacer la GNN, es decir, no estamos usando 
-            # flags como tal, sino que son indicadores de si existen o no... lo cual como todos tiene hacen esta features inutiles XD. 
-            # *Necesita cambio*
-        int(bool(g.value(chem_node, uri("AllergiesConcern")))),
-        int(bool(g.value(chem_node, uri("CancerConcern")))),
-        int(bool(g.value(chem_node, uri("DevelopReproductiveConcern")))),
-        int(bool(g.value(chem_node, uri("UseRestrictionsConcern")))),
+            if s.replace('.', '', 1).isdigit():
+                hv = float(s)
+                has_info = 1
+
+    allergies = g.value(chem_node, uri("AllergiesConcern"))
+    cancer = g.value(chem_node, uri("CancerConcern"))
+    develop = g.value(chem_node, uri("DevelopReproductiveConcern"))
+    use_restr = g.value(chem_node, uri("UseRestrictionsConcern"))
+
+    flags = [
+        level_to_int(allergies),
+        level_to_int(cancer),
+        level_to_int(develop),
+        level_to_int(use_restr),
     ]
-    chem_feats.append([hv] + flags)
+    if any(flags) or has_info:
+        has_info = 1
+    chem_feats.append([hv] + flags + [has_info])
 
 data["Chemical"].x = torch.tensor(chem_feats, dtype=torch.float)
 
@@ -114,8 +139,9 @@ def build_hub_features(node_type, prop):
             avg_age  = sum(prod_age[p] for p in prods) / n
             avg_chem = sum(chem_counts.get(p,0) for p in prods) / n
         else:
-            avg_age = avg_chem = 0.0
-        feats.append([n, avg_age, avg_chem])
+            avg_chem = 0.0
+        feats.append([n, avg_chem, avg_age])
+        #feats.append([n, avg_chem])
     return torch.tensor(feats, dtype=torch.float)
 
 data["Brand"].x       = build_hub_features("Brand",       "productHasBrand")
