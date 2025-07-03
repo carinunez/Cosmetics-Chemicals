@@ -1,0 +1,266 @@
+﻿# Listar algunos productos con su ID, nombre y compañía
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT ?cdphId ?productName ?companyId ?companyName
+WHERE {
+  ?p a ex:Product ;
+     ex:hasCDPHId ?cdphId ;
+     ex:hasProductName ?productName ;
+     ex:productMadeByCompany ?c .
+  ?c ex:hasCompanyId   ?companyId ;
+     ex:hasCompanyName ?companyName .
+}
+LIMIT 10
+
+#Contar cuántos productos hay por categoría
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT ?catId (COUNT(?p) AS ?numProductos)
+WHERE {
+  ?p a ex:Product ;
+     ex:productHasCategory ?cat .
+  ?cat ex:hasPrimaryCategoryId ?catId .
+}
+GROUP BY ?catId
+ORDER BY DESC(?numProductos)
+
+
+#¿Qué marcas existen y cuántos productos tiene cada una?
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT ?brandName (COUNT(?p) AS ?numProductos)
+WHERE {
+  ?p a ex:Product ;
+     ex:productHasBrand ?b .
+  ?b ex:hasBrandName ?brandName .
+}
+GROUP BY ?brandName
+ORDER BY DESC(?numProductos)
+LIMIT 10
+
+#Encontrar pares de productos que comparten la misma categoría 
+#(hasPrimaryCategoryId) y la misma marca (hasBrandName)
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT DISTINCT ?prodA ?idA ?prodB ?idB ?brandName ?catId
+WHERE {
+  # Dos productos distintos
+  ?prodA a ex:Product ;
+         ex:hasCDPHId ?idA ;
+         ex:productHasBrand ?b ;
+         ex:productHasCategory ?c .
+  ?prodB a ex:Product ;
+         ex:hasCDPHId ?idB ;
+         ex:productHasBrand ?b ;
+         ex:productHasCategory ?c .
+
+  FILTER (?prodA < ?prodB)    # Evita duplicados inversos
+
+  # Recuperamos literal de marca y literal de categoría
+  ?b ex:hasBrandName ?brandName .
+  ?c ex:hasPrimaryCategoryId ?catId .
+}
+LIMIT 20
+ # No parece haber ninguno.... sospechoso.
+
+#Detectar productos huérfanos (sin marca, sin compañía o sin categoría)
+#Productos sin marca
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT ?id
+WHERE {
+  ?p a ex:Product ;
+     ex:hasCDPHId ?id .
+  FILTER NOT EXISTS { ?p ex:productHasBrand ?b . }
+}
+#Productos sin compañía
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT ?id
+WHERE {
+  ?p a ex:Product ;
+     ex:hasCDPHId ?id .
+  FILTER NOT EXISTS { ?p ex:productMadeByCompany ?c . }
+}
+
+#Productos sin categoría
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT ?id
+WHERE {
+  ?p a ex:Product ;
+     ex:hasCDPHId ?id .
+  FILTER NOT EXISTS { ?p ex:productHasCategory ?cat . }
+}
+
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT DISTINCT ?compAId ?compBId ?compCId
+WHERE {
+  # A y B comparten categoría cat1
+  ?prodA ex:productMadeByCompany ?compA ; ex:productHasCategory ?cat1 .
+  ?prodB ex:productMadeByCompany ?compB ; ex:productHasCategory ?cat1 .
+  FILTER (?compA != ?compB)
+
+  # B y C comparten categoría cat2 (podría ser igual o distinta a cat1)
+  ?prodC ex:productMadeByCompany ?compB ; ex:productHasCategory ?cat2 .
+  ?prodD ex:productMadeByCompany ?compC ; ex:productHasCategory ?cat2 .
+  FILTER (?compC != ?compB)
+
+  # Para evitar ciclos triviales
+  FILTER (?compA != ?compC)
+
+  # Obtenemos solo los IDs
+  ?compA ex:hasCompanyId ?compAId .
+  ?compB ex:hasCompanyId ?compBId .
+  ?compC ex:hasCompanyId ?compCId .
+}
+LIMIT 20
+
+# Comunidades de compañías vía categorías compartidas
+
+# Companías conectadas por dos saltos en categoría
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT DISTINCT ?compAId ?compBId ?compCId
+WHERE {
+  # A y B comparten categoría cat1
+  ?prodA ex:productMadeByCompany ?compA ; ex:productHasCategory ?cat1 .
+  ?prodB ex:productMadeByCompany ?compB ; ex:productHasCategory ?cat1 .
+  FILTER (?compA != ?compB)
+
+  # B y C comparten categoría cat2 (podría ser igual o distinta a cat1)
+  ?prodC ex:productMadeByCompany ?compB ; ex:productHasCategory ?cat2 .
+  ?prodD ex:productMadeByCompany ?compC ; ex:productHasCategory ?cat2 .
+  FILTER (?compC != ?compB)
+
+  # Para evitar ciclos triviales
+  FILTER (?compA != ?compC)
+
+  # Obtenemos solo los IDs
+  ?compA ex:hasCompanyId ?compAId .
+  ?compB ex:hasCompanyId ?compBId .
+  ?compC ex:hasCompanyId ?compCId .
+}
+LIMIT 20
+
+# Esta query Revela “cadenas” de compañías conectadas indirectamente a través de categorías.
+# Si A comparte con B y B comparte con C, podemos decir que A y C están “en la misma red de categorías” sin haber coincidido directamente.
+
+# Pares de productos que comparten la misma categoría
+PREFIX ex: <http://example.org/cdph/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?idA ?idB ?catId
+WHERE {
+  {
+    SELECT ?cat ?idA
+    WHERE {
+      ?p a ex:Product ;
+         ex:hasCDPHId ?idA ;
+         ex:productHasCategory ?cat .
+    }
+  }
+  {
+    SELECT ?cat ?idB
+    WHERE {
+      ?q a ex:Product ;
+         ex:hasCDPHId ?idB ;
+         ex:productHasCategory ?cat .
+    }
+  }
+
+  # A estas alturas, ?idA y ?idB comparten la misma categoría ?cat.
+  FILTER( xsd:integer(?idA) < xsd:integer(?idB) )
+
+  # Recuperamos el catId una sola vez
+  ?cat ex:hasPrimaryCategoryId ?catId .
+}
+#ORDER BY ?catId ?idA ?idB
+LIMIT 50
+
+# Pares de productos que comparten la misma marca
+
+PREFIX ex: <http://example.org/cdph/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?idA ?idB ?brandName
+WHERE {
+  {
+    SELECT ?b ?idA
+    WHERE {
+      ?p a ex:Product ;
+         ex:hasCDPHId ?idA ;
+         ex:productHasBrand ?b .
+    }
+  }
+  {
+    SELECT ?b ?idB
+    WHERE {
+      ?q a ex:Product ;
+         ex:hasCDPHId ?idB ;
+         ex:productHasBrand ?b .
+    }
+  }
+
+  FILTER( xsd:integer(?idA) < xsd:integer(?idB) )
+
+  # Obtener literal de marca
+  ?b ex:hasBrandName ?brandName .
+}
+ORDER BY ?brandName ?idA ?idB
+LIMIT 50
+
+# Encontrar pares de productos que comparten la misma 
+# categoría (hasPrimaryCategoryId) y la misma marca (hasBrandName)
+
+PREFIX ex:   <http://example.org/cdph/>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?idA ?idB ?brandName ?catId
+WHERE {
+  {
+    SELECT ?b ?cat ?idA
+    WHERE {
+      ?p a ex:Product ;
+         ex:hasCDPHId       ?idA ;
+         ex:productHasBrand ?b ;
+         ex:productHasCategory ?cat .
+    }
+  }
+  {
+    SELECT ?b ?cat ?idB
+    WHERE {
+      ?q a ex:Product ;
+         ex:hasCDPHId       ?idB ;
+         ex:productHasBrand ?b ;
+         ex:productHasCategory ?cat .
+    }
+  }
+
+  # Comparamos los IDs numéricos para evitar duplicados inversos
+  FILTER( xsd:integer(?idA) < xsd:integer(?idB) )
+
+  # Obtenemos el nombre de la marca y el ID de categoría
+  ?b   ex:hasBrandName          ?brandName .
+  ?cat ex:hasPrimaryCategoryId  ?catId .
+}
+ORDER BY ?brandName ?catId ?idA ?idB
+LIMIT 50
+
+#Top 15 de químicos más frecuentes en productos discontinuados:
+PREFIX ex: <http://example.org/cdph/>
+
+SELECT ?chemicalName ?casNumber ?hazardScore (COUNT(DISTINCT ?product) AS ?frequency)
+WHERE {
+  ?product a ex:Product ;
+           ex:hasDiscontinuedDate ?discontinuedDate ;
+           ex:containsChemical ?chemical .
+  
+  ?chemical ex:hasChemicalName ?chemicalName ;
+            ex:hasCasNumber ?casNumber ;
+            ex:hasHazardScore ?hazardScore .
+}
+GROUP BY ?chemicalName ?casNumber ?hazardScore
+ORDER BY DESC(?frequency)
+LIMIT 15
