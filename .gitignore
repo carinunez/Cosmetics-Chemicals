@@ -6,6 +6,10 @@ __pycache__
 *.xlsx
 *.xls
 *.pt
+*.zip
+
+*vis_presentacion
+
 
 
 !Chemicals_concerns/*.csv
