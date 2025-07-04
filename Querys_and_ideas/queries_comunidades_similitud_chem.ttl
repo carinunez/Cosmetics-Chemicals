@@ -1,0 +1,102 @@
+// Químicos similares según productos y categorías en los que están presentes
+MATCH (chem1:Chemical)<-[:hasChemical]-(P:Product)-[:hasChemical]->(chem2:Chemical)
+WHERE chem1.ChemID < chem2.ChemID
+WITH chem1, chem2, count(DISTINCT P) AS prod_comun
+MERGE u = (chem1)-[sim:Chem_SIMILAR]-(chem2)
+SET sim.weight = prod_comun  // agrega el peso(prod cen comun) como propiedad de la relacion
+RETURN gds.graph.project(
+  'chemical-graph_no_cat',
+  chem1, chem2,
+  { relationshipProperties: sim  { .weight } },{ undirectedRelationshipTypes: ['*'] });
+
+
+
+# Revision superficial
+# Como están conectados los químicos basado en los productos en los que están presentes
+MATCH u= (chem1:Chemical)-[:Chem_SIMILAR]-(chem2:Chemical)
+RETURN u 
+
+# Como están conectados los químicos basado en los productos en los que están presentes
+# Dejando fuera 'titanium dioxide' y 'trade secret'
+MATCH u= (chem1:Chemical)-[:Chem_SIMILAR]-(chem2:Chemical)
+WHERE chem1.ChemicalName <> 'titanium dioxide' and chem2.ChemicalName <> 'titanium dioxide' and
+      chem1.ChemicalName <> 'trade secret' and chem2.ChemicalName <> 'trade secret'
+RETURN u 
+
+# Revisión de betweeness entre químicos
+CALL gds.betweenness.stream('chemical-graph_no_cat')
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).ChemicalName as Name, score AS chems_similares
+ORDER BY chems_similares DESC
+
+# Revisión de similitud y comunidades de productos
+
+MATCH (prod1:Product)-[p_chem:hasChemical]-(chem:Chemical)
+RETURN gds.graph.project( 'prod_similarity', prod1,chem, { relationshipProperties: p_chem { .weight } },{ undirectedRelationshipTypes: ['*'] })
+
+CALL gds.leiden.stream('prod_similarity', { randomSeed: 19 })
+YIELD nodeId, communityId
+RETURN gds.util.asNode(nodeId).ProductName AS ProdName, communityId
+ORDER BY ProdName ASC
+
+# Se agrega la comunidad a las propiedades del producto
+CALL gds.leiden.write('prod_similarity', { writeProperty: 'communityId', randomSeed: 19 })
+YIELD communityCount, nodePropertiesWritten
+
+
+
+# Comunidades CHEMICALS
+// Químicos similares según productos y categorías en los que están presentes
+MATCH (chem1:Chemical)<-[:hasChemical]-(P:Product)-[:hasChemical]->(chem2:Chemical)
+WHERE chem1.ChemID < chem2.ChemID and  chem1.ChemicalName <>'titanium dioxide' and chem2.ChemicalName <>'titanium dioxide'
+WITH chem1, chem2, count(DISTINCT P) AS prod_comun
+MERGE u = (chem1)-[sim:Chem_SIMILAR]-(chem2)
+SET sim.weight = prod_comun  // agrega el peso(prod cen comun) como propiedad de la relacion
+RETURN gds.graph.project(
+  'chemical-graph',
+  chem1, chem2,
+  { relationshipProperties: sim  { .weight } },{ undirectedRelationshipTypes: ['*'] });
+
+
+CALL gds.louvain.stream('chemical-graph')
+YIELD nodeId, communityId
+RETURN gds.util.asNode(nodeId).ChemicalName AS ChemName, communityId
+ORDER BY ChemName ASC
+
+CALL gds.louvain.write('chemical-graph', { writeProperty: 'ChemCommunnity'})
+YIELD communityCount, nodePropertiesWritten
+
+MATCH (chem:Chemical)
+WHERE (chem.ChemCommunnity) IS  NULL and chem.ChemicalName <>'titanium dioxide'
+SET chem.ChemCommunnity = 20
+RETURN count(chem) AS nodos_actualizados
+
+MATCH (chem:Chemical{ChemicalName:'titanium dioxide'})
+SET chem.ChemCommunnity = 100
+RETURN count(chem) AS nodos_actualizados
+
+MATCH (prod1:Product)-[p_chem:hasChemical]-(chem:Chemical)
+RETURN gds.graph.project( 'prod_similarity', prod1,chem, { relationshipProperties: p_chem { .weight } },{ undirectedRelationshipTypes: ['*'] })
+
+CALL gds.louvain.stream('prod_similarity')
+YIELD nodeId, communityId
+RETURN gds.util.asNode(nodeId).ProductName AS ProdName, communityId
+ORDER BY ProdName ASC
+
+CALL gds.louvain.write('prod_similarity', { writeProperty: 'ProdCommunity'})
+YIELD communityCount, nodePropertiesWritten
+
+
+// Se genera un nodo para cada comunidad encontrada de químicos y de productos para ver como
+// se relacionan entre ellas. 
+MATCH (p:Product)-[:hasChemical]->(c:Chemical)
+WITH p.ProdCommunity AS pc, c.ChemCommunnity AS cc, count(*) AS relaciones
+MERGE (pcNode:Prod_Community {id: pc})
+MERGE (ccNode:Chem_Community {id: cc})
+MERGE (pcNode)-[r:RelacionComunidades]->(ccNode)
+SET r.num_relationships = relaciones
+
+# Revisa las relaciones dejando fuera 'titanium dioxide'
+MATCH u=(pc:Prod_Community)-[:RelacionComunidades]-(cc:Chem_Community)
+// WHERE cc.id <> 100
+RETURN u
