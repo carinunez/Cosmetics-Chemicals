@@ -9,43 +9,14 @@ RETURN gds.graph.project(
   chem1, chem2,
   { relationshipProperties: sim  { .weight } },{ undirectedRelationshipTypes: ['*'] });
 
-
-
-# Revision superficial
-# Como están conectados los químicos basado en los productos en los que están presentes
-MATCH u= (chem1:Chemical)-[:Chem_SIMILAR]-(chem2:Chemical)
-RETURN u 
-
-# Como están conectados los químicos basado en los productos en los que están presentes
-# Dejando fuera 'titanium dioxide' y 'trade secret'
-MATCH u= (chem1:Chemical)-[:Chem_SIMILAR]-(chem2:Chemical)
-WHERE chem1.ChemicalName <> 'titanium dioxide' and chem2.ChemicalName <> 'titanium dioxide' and
-      chem1.ChemicalName <> 'trade secret' and chem2.ChemicalName <> 'trade secret'
-RETURN u 
-
-# Revisión de betweeness entre químicos
+// Centralidad de los quimicos
 CALL gds.betweenness.stream('chemical-graph_no_cat')
 YIELD nodeId, score
 RETURN gds.util.asNode(nodeId).ChemicalName as Name, score AS chems_similares
 ORDER BY chems_similares DESC
 
-# Revisión de similitud y comunidades de productos
 
-MATCH (prod1:Product)-[p_chem:hasChemical]-(chem:Chemical)
-RETURN gds.graph.project( 'prod_similarity', prod1,chem, { relationshipProperties: p_chem { .weight } },{ undirectedRelationshipTypes: ['*'] })
-
-CALL gds.leiden.stream('prod_similarity', { randomSeed: 19 })
-YIELD nodeId, communityId
-RETURN gds.util.asNode(nodeId).ProductName AS ProdName, communityId
-ORDER BY ProdName ASC
-
-# Se agrega la comunidad a las propiedades del producto
-CALL gds.leiden.write('prod_similarity', { writeProperty: 'communityId', randomSeed: 19 })
-YIELD communityCount, nodePropertiesWritten
-
-
-
-# Comunidades CHEMICALS
+// Comunidades CHEMICALS
 // Químicos similares según productos y categorías en los que están presentes
 MATCH (chem1:Chemical)<-[:hasChemical]-(P:Product)-[:hasChemical]->(chem2:Chemical)
 WHERE chem1.ChemID < chem2.ChemID and  chem1.ChemicalName <>'titanium dioxide' and chem2.ChemicalName <>'titanium dioxide'
@@ -58,6 +29,12 @@ RETURN gds.graph.project(
   { relationshipProperties: sim  { .weight } },{ undirectedRelationshipTypes: ['*'] });
 
 
+//Revision superficial
+// Como están conectados los químicos basado en los productos en los que están presentes
+MATCH u= (chem1:Chemical)-[:Chem_SIMILAR]-(chem2:Chemical)
+RETURN u 
+
+
 CALL gds.louvain.stream('chemical-graph')
 YIELD nodeId, communityId
 RETURN gds.util.asNode(nodeId).ChemicalName AS ChemName, communityId
@@ -66,17 +43,22 @@ ORDER BY ChemName ASC
 CALL gds.louvain.write('chemical-graph', { writeProperty: 'ChemCommunnity'})
 YIELD communityCount, nodePropertiesWritten
 
+
+// Agrupo los quimicos a los que no se les asignó una clase posiblemente
+// porque no se encontraron al hacer webscrapping entonces no tienen algunas props
 MATCH (chem:Chemical)
 WHERE (chem.ChemCommunnity) IS  NULL and chem.ChemicalName <>'titanium dioxide'
 SET chem.ChemCommunnity = 20
 RETURN count(chem) AS nodos_actualizados
 
+// Dejo el dioxido de titanio como una comunidad aparte
 MATCH (chem:Chemical{ChemicalName:'titanium dioxide'})
 SET chem.ChemCommunnity = 100
 RETURN count(chem) AS nodos_actualizados
 
 MATCH (prod1:Product)-[p_chem:hasChemical]-(chem:Chemical)
-RETURN gds.graph.project( 'prod_similarity', prod1,chem, { relationshipProperties: p_chem { .weight } },{ undirectedRelationshipTypes: ['*'] })
+RETURN gds.graph.project( 'prod_similarity', prod1, chem,
+                           { relationshipProperties: p_chem { .weight } },{ undirectedRelationshipTypes: ['*'] })
 
 CALL gds.louvain.stream('prod_similarity')
 YIELD nodeId, communityId
@@ -96,7 +78,8 @@ MERGE (ccNode:Chem_Community {id: cc})
 MERGE (pcNode)-[r:RelacionComunidades]->(ccNode)
 SET r.num_relationships = relaciones
 
-# Revisa las relaciones dejando fuera 'titanium dioxide'
+
+//Revisa las relaciones dejando fuera 'titanium dioxide'
 MATCH u=(pc:Prod_Community)-[:RelacionComunidades]-(cc:Chem_Community)
 // WHERE cc.id <> 100
 RETURN u
